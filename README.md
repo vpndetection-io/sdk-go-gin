@@ -28,7 +28,7 @@ import (
 
     "github.com/gin-gonic/gin"
     vpndetectiongin "github.com/vpndetection-io/sdk-go-gin"
-    "github.com/vpndetection-io/sdk-go/middleware"
+    "github.com/vpndetection-io/sdk-go/v4/middleware"
 )
 
 func main() {

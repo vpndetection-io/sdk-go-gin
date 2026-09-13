@@ -19,9 +19,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	vpndetection "github.com/vpndetection-io/sdk-go"
 	vpndetectiongin "github.com/vpndetection-io/sdk-go-gin"
-	"github.com/vpndetection-io/sdk-go/middleware"
+	vpndetection "github.com/vpndetection-io/sdk-go/v4"
+	"github.com/vpndetection-io/sdk-go/v4/middleware"
 )
 
 func init() { gin.SetMode(gin.TestMode) }
