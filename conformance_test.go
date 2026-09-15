@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	vpndetectiongin "github.com/vpndetection-io/sdk-go-gin"
-	"github.com/vpndetection-io/sdk-go/v4/middleware"
+	vpndetectiongin "github.com/vpndetection-io/sdk-go-gin/v2"
+	"github.com/vpndetection-io/sdk-go/v5/middleware"
 )
 
 // A slog handler that keeps the messages, which is how a warning gets asserted

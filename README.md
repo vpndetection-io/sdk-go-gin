@@ -1,6 +1,6 @@
 # [<img src="https://s3.vpndetection.io/vpndetection-public/brand/mark.svg" alt="VPNDetection" width="24"/>](https://vpndetection.io/) VPNDetection Gin Middleware
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/vpndetection-io/sdk-go-gin.svg)](https://pkg.go.dev/github.com/vpndetection-io/sdk-go-gin)
+[![Go Reference](https://pkg.go.dev/badge/github.com/vpndetection-io/sdk-go-gin/v2.svg)](https://pkg.go.dev/github.com/vpndetection-io/sdk-go-gin/v2)
 [![license](https://img.shields.io/github/license/vpndetection-io/sdk-go-gin.svg)](LICENSE)
 
 The official [Gin](https://gin-gonic.com) middleware for the [VPNDetection](https://vpndetection.io) API.
@@ -12,7 +12,7 @@ For anything that takes a `func(http.Handler) http.Handler` — the standard lib
 ## Getting Started
 
 ```bash
-go get github.com/vpndetection-io/sdk-go-gin
+go get github.com/vpndetection-io/sdk-go-gin/v2
 ```
 
 Requires Go 1.24 or newer.
@@ -27,8 +27,8 @@ import (
     "os"
 
     "github.com/gin-gonic/gin"
-    vpndetectiongin "github.com/vpndetection-io/sdk-go-gin"
-    "github.com/vpndetection-io/sdk-go/v4/middleware"
+    vpndetectiongin "github.com/vpndetection-io/sdk-go-gin/v2"
+    "github.com/vpndetection-io/sdk-go/v5/middleware"
 )
 
 func main() {

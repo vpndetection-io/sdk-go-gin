@@ -1,10 +1,10 @@
-module github.com/vpndetection-io/sdk-go-gin
+module github.com/vpndetection-io/sdk-go-gin/v2
 
 go 1.24.0
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/vpndetection-io/sdk-go/v4 v4.0.0
+	github.com/vpndetection-io/sdk-go/v5 v5.0.0
 )
 
 require (

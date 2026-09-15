@@ -9,8 +9,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	vpndetection "github.com/vpndetection-io/sdk-go/v4"
-	"github.com/vpndetection-io/sdk-go/v4/middleware"
+	vpndetection "github.com/vpndetection-io/sdk-go/v5"
+	"github.com/vpndetection-io/sdk-go/v5/middleware"
 )
 
 // ContextKey is where the answer is stored on the gin.Context, for code that
