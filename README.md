@@ -147,7 +147,7 @@ Set `FailClosed: true` to block instead. Private addresses are answered locally 
 
 ## Cost and latency
 
-Answers are cached per middleware for an hour, so a returning visitor costs nothing, and private addresses never leave the process. A cache miss is one request to our API, bounded at 2500 ms by default and not retried — on a request path, failing open quickly beats holding a visitor while we try again. Both are adjustable, and so is the cache, through a client you build yourself and pass as `Client`.
+Answers are cached per middleware for an hour, so a returning visitor costs nothing, and private addresses never leave the process. A cache miss is one request to our API, bounded at 2500 ms by default and not retried — on a request path, failing open quickly beats holding a visitor while we try again. Change either with `Timeout` and `Retries` in the options, not on a client: the middleware sets both on every lookup it makes. The cache is sized on a client you build yourself (`vpndetection.WithCache`) and pass as `Client`.
 
 Use it on the route group that matters rather than on the whole engine, or skip what you do not care about:
 
