@@ -1,4 +1,4 @@
-# [<img src="https://s3.vpndetection.io/vpndetection-public/brand/mark.svg" alt="VPNDetection" width="24"/>](https://vpndetection.io/) VPNDetection Gin Middleware
+# [<img src="https://s3.vpndetection.io/vpndetection-public/brand/mark.svg" alt="VPNDetection" height="28"/>](https://vpndetection.io/) VPNDetection Gin Middleware
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/vpndetection-io/sdk-go-gin/v2.svg)](https://pkg.go.dev/github.com/vpndetection-io/sdk-go-gin/v2)
 [![license](https://img.shields.io/github/license/vpndetection-io/sdk-go-gin.svg)](LICENSE)
