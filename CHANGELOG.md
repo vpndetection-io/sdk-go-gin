@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.4 - 2026-09-27
+
+### Fixes
+
+- Require sdk-go v5.3.4: bounded Retry-After and poll, no doubled slash ([`6f71c56`](https://github.com/vpndetection-io/sdk-go-gin/commit/6f71c564fe1e3891083a0e7a144e884c9e312071))
+
 ## 2.1.3 - 2026-09-26
 
 ### Fixes
