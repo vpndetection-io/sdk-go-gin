@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.5 - 2026-09-27
+
+### Features
+
+- Require sdk-go v5.4.0: OauthMetadata carries client_id_metadata_document_supported ([`7baa4aa`](https://github.com/vpndetection-io/sdk-go-gin/commit/7baa4aadf3bd3e914edcbec95b53ad994f10d5eb))
+
 ## 2.1.4 - 2026-09-27
 
 ### Fixes
