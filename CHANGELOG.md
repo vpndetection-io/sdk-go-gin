@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.7 - 2026-09-28
+
+### Fixes
+
+- Require sdk-go v5.4.2: IPv4-mapped visitors are looked up, not waved through ([`dc1465e`](https://github.com/vpndetection-io/sdk-go-gin/commit/dc1465ee6075e5e25b4b1959fc3cf41f6cd70e1d))
+
 ## 2.1.6 - 2026-09-28
 
 ### Fixes
