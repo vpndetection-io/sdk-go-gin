@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.8 - 2026-09-29
+
+### Fixes
+
+- Require sdk-go v5.4.3: 26 more reserved ranges are answered locally ([`d40da7f`](https://github.com/vpndetection-io/sdk-go-gin/commit/d40da7ff30a656960e5e00c80ae1f1b08911e819))
+
 ## 2.1.7 - 2026-09-28
 
 ### Fixes
