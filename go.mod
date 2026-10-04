@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	github.com/gin-gonic/gin v1.11.0
-	github.com/vpndetection-io/sdk-go/v5 v5.4.3
+	github.com/vpndetection-io/sdk-go/v5 v5.4.4
 )
 
 require (
