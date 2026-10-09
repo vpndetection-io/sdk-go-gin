@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.11 - 2026-10-09
+
+### Fixes
+
+- Require golang.org/x/net v0.60.0: four HTTP/2 server fixes ([`970e4a4`](https://github.com/vpndetection-io/sdk-go-gin/commit/970e4a4e1935f85ff9b74c374cd0ab0739d32da4))
+
 ## 2.1.10 - 2026-10-04
 
 ### Features
