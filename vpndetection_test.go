@@ -472,3 +472,13 @@ func TestAConditionThatConstrainsNothingIsRefused(t *testing.T) {
 		}
 	}
 }
+
+// The README's own setup, an APIKey and nothing else. Through sdk-go v5.5.0 New
+// refused it, and Must panicked, because the core passed the unset BaseURL on.
+func TestStartsWithOnlyAnAPIKey(t *testing.T) {
+	if _, err := vpndetectiongin.New(vpndetectiongin.Options{
+		Options: middleware.Options[*gin.Context]{APIKey: "key"},
+	}); err != nil {
+		t.Fatalf("New with only an APIKey: %v", err)
+	}
+}
