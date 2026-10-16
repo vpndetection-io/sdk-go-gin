@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.14 - 2026-10-16
+
+### Fixes
+
+- Require sdk-go v5.5.3: unreadable answers retried, the key trimmed ([`dc54c0d`](https://github.com/vpndetection-io/sdk-go-gin/commit/dc54c0d4d0307b5591a13365e5acf981d9133b79))
+
 ## 2.1.13 - 2026-10-10
 
 ### Fixes
