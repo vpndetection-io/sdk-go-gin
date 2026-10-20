@@ -17,7 +17,7 @@ go get github.com/vpndetection-io/sdk-go-gin/v2
 
 Requires Go 1.26 or newer.
 
-You need an API key. Create one in the [console](https://app.vpndetection.io); the free tier's allowance is counted per source address, and a server is a single source address, so a key is what makes this usable in production rather than optional.
+You need an API key. Create one in the [console](https://app.vpndetection.io); without one the allowance is counted per source address, and a server is a single source address, so a key is what makes this usable in production rather than optional.
 
 ```go
 package main
@@ -161,7 +161,7 @@ Beyond a few million distinct visitors a day, stop calling the API per request: 
 
 ## Absent is not false
 
-Only `IP` and `IsVpn` come back on every plan. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
+Without a key only `IP` and `IsVpn` come back, and a free key adds Tor, relay, `Location` and `Asn`. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
 
 ```go
 vpndetection.BoolValue(lookup.Result.IsHosting)  // when you only want the flag
