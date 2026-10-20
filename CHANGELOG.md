@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.18 - 2026-10-20
+
+### Features
+
+- Require sdk-go v5.9.0: lookup results carry Location and Asn ([`077807c`](https://github.com/vpndetection-io/sdk-go-gin/commit/077807cb615f44bedbdd399dd914cce736c9784c))
+
 ## 2.1.17 - 2026-10-19
 
 ### Fixes
