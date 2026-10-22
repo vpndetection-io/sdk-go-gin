@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.19 - 2026-10-22
+
+### Fixes
+
+- Require sdk-go v5.10.0: Retry-After and date-time zones, Oauth.Register ([`193d6fd`](https://github.com/vpndetection-io/sdk-go-gin/commit/193d6fde7d06072bd40c0d224dc9f23017629d29))
+
 ## 2.1.18 - 2026-10-20
 
 ### Features
