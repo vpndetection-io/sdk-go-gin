@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.23 - 2026-11-08
+
+### Fixes
+
+- Require sdk-go v5.11.1: the download methods keep v5.10's signatures ([`0632452`](https://github.com/vpndetection-io/sdk-go-gin/commit/0632452e6dc45657dbdc49ff88582484e8c0d245))
+
 ## 2.1.22 - 2026-11-07
 
 ### Features
