@@ -475,10 +475,83 @@ func TestAConditionThatConstrainsNothingIsRefused(t *testing.T) {
 
 // The README's own setup, an APIKey and nothing else. Through sdk-go v5.5.0 New
 // refused it, and Must panicked, because the core passed the unset BaseURL on.
-func TestStartsWithOnlyAnAPIKey(t *testing.T) {
-	if _, err := vpndetectiongin.New(vpndetectiongin.Options{
-		Options: middleware.Options[*gin.Context]{APIKey: "key"},
-	}); err != nil {
-		t.Fatalf("New with only an APIKey: %v", err)
+// The README's app as written: its trusted proxies, and the middleware built from
+// an API key alone, so the client, the base URL and the transport are the SDK's
+// defaults. The default transport answers for the API's host alone, which is
+// why this test swaps a global and never runs in parallel.
+func TestTheREADMEsAppLooksUpTheVisitorWithOnlyAnAPIKey(t *testing.T) {
+	for _, key := range []string{"key", ""} {
+		t.Run("key "+map[bool]string{true: "set", false: "unset"}[key != ""], func(t *testing.T) {
+			api := &apiHost{}
+			saved := http.DefaultTransport
+			http.DefaultTransport = api
+			t.Cleanup(func() { http.DefaultTransport = saved })
+
+			engine := gin.New()
+			if err := engine.SetTrustedProxies([]string{"10.0.0.0/8"}); err != nil {
+				t.Fatalf("SetTrustedProxies: %v", err)
+			}
+			engine.Use(vpndetectiongin.Must(vpndetectiongin.Options{
+				Options: middleware.Options[*gin.Context]{APIKey: key},
+			}))
+			engine.GET("/", func(c *gin.Context) {
+				lookup := vpndetectiongin.FromContext(c)
+				if lookup.Result != nil && lookup.Result.IsVpn {
+					c.String(http.StatusOK, "Hello, VPN user")
+					return
+				}
+				c.String(http.StatusOK, "Hello")
+			})
+
+			// A proxy inside 10.0.0.0/8 names the visitor; a peer outside it
+			// cannot, so its forged header names nobody.
+			for peer, want := range map[string]string{"10.1.2.3:4567": publicIP, "45.83.91.9:4567": "45.83.91.9"} {
+				request := httptest.NewRequest(http.MethodGet, "/", nil)
+				request.RemoteAddr = peer
+				request.Header.Set("X-Forwarded-For", publicIP)
+				recorder := httptest.NewRecorder()
+				engine.ServeHTTP(recorder, request)
+				if body := recorder.Body.String(); body != "Hello, VPN user" {
+					t.Errorf("from %s answered %q, want the VPN visitor's page", peer, body)
+				}
+				if got := api.last(); got.path != "/"+want || got.auth != map[bool]string{true: "Bearer key"}[key != ""] {
+					t.Errorf("from %s asked %+v, want /%s with the key only when one is set", peer, got, want)
+				}
+			}
+		})
 	}
+}
+
+// The API's host, answering every lookup as a VPN visitor and recording what it
+// was asked. Any other host is refused, so nothing leaves the test.
+type apiHost struct {
+	mu   sync.Mutex
+	sent []apiRequest
+}
+
+type apiRequest struct{ path, auth string }
+
+func (a *apiHost) RoundTrip(request *http.Request) (*http.Response, error) {
+	if request.URL.Host != "api.vpndetection.io" {
+		return nil, fmt.Errorf("unexpected host %q", request.URL.Host)
+	}
+	a.mu.Lock()
+	a.sent = append(a.sent, apiRequest{path: request.URL.Path, auth: request.Header.Get("Authorization")})
+	a.mu.Unlock()
+	ip := strings.TrimPrefix(request.URL.Path, "/")
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": {"application/json"}},
+		Body:       io.NopCloser(strings.NewReader(fmt.Sprintf(`{"ip":%q,"is_vpn":true}`, ip))),
+		Request:    request,
+	}, nil
+}
+
+func (a *apiHost) last() apiRequest {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if len(a.sent) == 0 {
+		return apiRequest{}
+	}
+	return a.sent[len(a.sent)-1]
 }
