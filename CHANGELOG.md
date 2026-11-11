@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.25 - 2026-11-11
+
+### Fixes
+
+- Require vpndetection v5.12.1: plainer words on lookups without a key ([`6d4785e`](https://github.com/vpndetection-io/sdk-go-gin/commit/6d4785e264c1fd41411b43b69717d1b83f596fff))
+
 ## 2.1.24 - 2026-11-11
 
 ### Features
