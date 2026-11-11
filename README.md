@@ -17,7 +17,7 @@ go get github.com/vpndetection-io/sdk-go-gin/v2
 
 Requires Go 1.26 or newer.
 
-You need an API key. Create one in the [console](https://app.vpndetection.io); without one a lookup leaves out the hosting, CDN and proxy flags, so a key is what makes this usable in production rather than optional.
+You need an API key. Create one in the [console](https://app.vpndetection.io); without one a lookup is on the Unlimited tier, for [non-commercial use](https://vpndetection.io/terms#no-key) only, and leaves out the hosting, CDN and proxy flags, so a key is what makes this usable in production rather than optional.
 
 ```go
 package main
