@@ -18,8 +18,8 @@ import (
 const ContextKey = "vpndetection"
 
 // Options configure the middleware. Everything is optional except that you
-// almost certainly want an APIKey: without one, lookups are limited to 60 a
-// minute from each source address, and a server is one source address.
+// almost certainly want an APIKey: without one a lookup leaves out the hosting,
+// CDN and proxy flags.
 type Options struct {
 	middleware.Options[*gin.Context]
 
