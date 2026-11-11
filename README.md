@@ -17,7 +17,7 @@ go get github.com/vpndetection-io/sdk-go-gin/v2
 
 Requires Go 1.26 or newer.
 
-You need an API key on a paid plan. Create one in the [console](https://app.vpndetection.io); without one a lookup is on the Unlimited tier and leaves out the hosting, CDN and proxy flags, so a paid plan is what makes this usable in production rather than optional. A new account can try every field, 100 lookups a day.
+You need an API key on a paid plan. Create one in the [console](https://app.vpndetection.io); without one a lookup is on Unlimited, the free plan, and leaves out the hosting, CDN and proxy flags, so a paid plan is what makes this usable in production rather than optional. A free account tries every field, 100 lookups a day.
 
 ```go
 package main
@@ -161,7 +161,7 @@ Beyond a few million distinct visitors a day, stop calling the API per request: 
 
 ## Absent is not false
 
-The Unlimited tier, with a key or without one, leaves out `IsHosting`, `IsCdn` and the four proxy flags, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
+Unlimited, with a key or without one, leaves out `IsHosting`, `IsCdn` and the four proxy flags, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
 
 ```go
 vpndetection.BoolValue(lookup.Result.IsHosting)  // when you only want the flag
