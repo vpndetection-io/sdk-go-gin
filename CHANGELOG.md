@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.27 - 2026-11-11
+
+### Features
+
+- Require vpndetection v5.13.0: trial_expired on a trial key's answers ([`2e1d47c`](https://github.com/vpndetection-io/sdk-go-gin/commit/2e1d47c9ef0e148b1e72344dfa97b59a2de7476b))
+
 ## 2.1.26 - 2026-11-11
 
 ### Fixes
