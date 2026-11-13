@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.30 - 2026-11-13
+
+### Fixes
+
+- Require vpndetection v5.14.0: every request names the SDK in its User-Agent ([`f13c298`](https://github.com/vpndetection-io/sdk-go-gin/commit/f13c29867fad54bd890f3b99f1064a0dd6dea52e))
+
 ## 2.1.29 - 2026-11-11
 
 ### Fixes
