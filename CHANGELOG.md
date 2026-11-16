@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.32 - 2026-11-16
+
+### Fixes
+
+- Require sdk-go v5.16.0: the plan's name ([`401d2ca`](https://github.com/vpndetection-io/sdk-go-gin/commit/401d2ca6ef10c584236d68894867bbef815c4c02))
+
 ## 2.1.31 - 2026-11-14
 
 ### Fixes
