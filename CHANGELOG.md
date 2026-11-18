@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.33 - 2026-11-18
+
+### Fixes
+
+- Require sdk-go v5.17.0: cap_reached past a paid plan's overage cap ([`fdf6f0a`](https://github.com/vpndetection-io/sdk-go-gin/commit/fdf6f0a138b26e4919a7444d546083d6c5719362))
+
 ## 2.1.32 - 2026-11-16
 
 ### Fixes
