@@ -3,11 +3,11 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/vpndetection-io/sdk-go-gin/v2.svg)](https://pkg.go.dev/github.com/vpndetection-io/sdk-go-gin/v2)
 [![license](https://img.shields.io/github/license/vpndetection-io/sdk-go-gin.svg)](LICENSE)
 
-The official [Gin](https://gin-gonic.com) middleware for the [VPNDetection](https://vpndetection.io) API.
+The official [Gin](https://gin-gonic.com) middleware for the [VPNDetection](https://vpndetection.io) API: it checks each visitor's IP for VPN, Tor and proxy use, and can block them with a 403.
 
-It classifies the visitor behind each request — VPN, residential proxy, Tor, hosting, CDN, relay — and puts the answer on the context. Blocking is opt-in.
+It classifies the visitor behind each request as VPN, residential proxy, Tor, hosting, CDN or relay, and puts the answer on the context. Blocking is opt-in.
 
-For anything that takes a `func(http.Handler) http.Handler` — the standard library, chi, gorilla/mux, echo — use [sdk-go-nethttp](https://github.com/vpndetection-io/sdk-go-nethttp) instead.
+For anything that takes a `func(http.Handler) http.Handler`, such as the standard library, chi, gorilla/mux or echo, use [sdk-go-nethttp](https://github.com/vpndetection-io/sdk-go-nethttp) instead.
 
 ## Getting Started
 
@@ -17,7 +17,7 @@ go get github.com/vpndetection-io/sdk-go-gin/v2
 
 Requires Go 1.26 or newer.
 
-You need an API key on a paid plan. Create one in the [console](https://app.vpndetection.io); without one a lookup is on Unlimited, the free plan, and leaves out the hosting, CDN and proxy flags, so a paid plan is what makes this usable in production rather than optional. A free account tries every field.
+No API key needed to start. Without one, a lookup is on Unlimited, the free plan, which answers VPN, Tor and relay detection with no daily or monthly cap. A paid plan's key adds the hosting, CDN and proxy flags and the provider behind each flag: create one in the [console](https://app.vpndetection.io). A free account tries every field.
 
 ```go
 package main
@@ -57,7 +57,7 @@ func main() {
 }
 ```
 
-By default nothing is blocked. Every request gets a `Lookup` on its `gin.Context` and your own code decides what that means — which is usually what you want, because whether a VPN visitor is a problem depends entirely on what they are doing.
+By default nothing is blocked. Every request gets a `Lookup` on its `gin.Context` and your own code decides what to do with it, since whether a VPN visitor is a problem depends on what they're doing.
 
 `Must` panics on a misconfiguration, which suits a package-level variable. `New` returns the error instead.
 
@@ -104,9 +104,9 @@ OnBlocked: func(c *gin.Context, lookup *middleware.Lookup) {
 
 ## Where the client address comes from
 
-This is the setting that decides whether any of the above works, and it is the one thing only you can get right.
+Get this setting right, or none of the above works.
 
-By default the middleware uses gin's own `c.ClientIP()`, and **gin's default is to trust every peer**. `ClientIP` walks `X-Forwarded-For` for addresses it trusts, and out of the box it trusts all of them — so a visitor who sets that header themselves is believed, and detection silently does nothing. This is measured, not assumed: the test suite asserts it, so if gin ever changes the default this README goes red with it.
+By default the middleware uses gin's own `c.ClientIP()`, and **gin's default is to trust every peer**. `ClientIP` walks `X-Forwarded-For` for addresses it trusts, and out of the box it trusts all of them, so a visitor who sets that header themselves is believed, and detection silently does nothing. This is measured, not assumed: the test suite asserts it, so if gin ever changes the default this README goes red with it.
 
 The fix is gin's own setting, naming the proxies actually in front of you:
 
@@ -122,7 +122,7 @@ For an edge that writes the address into its own header, name the header:
 IPSelector: vpndetectiongin.HeaderIPSelector("CF-Connecting-IP"),  // or True-Client-IP
 ```
 
-`XFFIPSelector(0)` reads the left-most `X-Forwarded-For` entry. Be aware that the left-most entry is whatever the caller sent, because proxies append to that header — it is only trustworthy when an edge you control overwrites it. If you know how many proxies sit in front, count from the right instead: `XFFIPSelector(1)` is the address your nearest proxy saw.
+`XFFIPSelector(0)` reads the left-most `X-Forwarded-For` entry. The left-most entry is whatever the caller sent, since proxies append to that header, so trust it only when an edge you control overwrites it. If you know how many proxies sit in front, count from the right instead: `XFFIPSelector(1)` is the address your nearest proxy saw.
 
 Anything else, pass your own function. It receives the request and returns an address:
 
@@ -147,7 +147,7 @@ Set `FailClosed: true` to block instead. Private addresses are answered locally 
 
 ## Cost and latency
 
-Answers are cached per middleware for an hour, so a returning visitor costs nothing, and private addresses never leave the process. A cache miss is one request to our API, bounded at 2500 ms by default and not retried — on a request path, failing open quickly beats holding a visitor while we try again. Change either with `Timeout` and `Retries` in the options, not on a client: the middleware sets both on every lookup it makes. The cache is sized on a client you build yourself (`vpndetection.WithCache`) and pass as `Client`.
+Answers are cached per middleware for an hour, so a returning visitor costs nothing, and private addresses never leave the process. A cache miss is one request to our API, bounded at 2500 ms by default and not retried: on a request path, failing open fast beats holding a visitor while we retry. Change either with `Timeout` and `Retries` in the options, not on a client: the middleware sets both on every lookup it makes. The cache is sized on a client you build yourself (`vpndetection.WithCache`) and pass as `Client`.
 
 Use it on the route group that matters rather than on the whole engine, or skip what you do not care about:
 
@@ -161,7 +161,7 @@ Beyond a few million distinct visitors a day, stop calling the API per request: 
 
 ## Absent is not false
 
-Unlimited, with a key or without one, leaves out `IsHosting`, `IsCdn` and the four proxy flags, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
+Unlimited, with a key or without one, leaves out `IsHosting`, `IsCdn`, the four proxy flags and the carrier, satellite, SSH, SMTP, web, DNS resolver and BitTorrent flags, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
 
 ```go
 vpndetection.BoolValue(lookup.Result.IsHosting)  // when you only want the flag
