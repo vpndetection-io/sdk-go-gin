@@ -2,6 +2,16 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.1.36 - 2026-11-22
+
+### Features
+
+- Require sdk-go v5.19.0: is_bot and bot, and an AS answer read whole ([`d942969`](https://github.com/vpndetection-io/sdk-go-gin/commit/d94296983c2b05e3d22a8abf77aecfe97ec74c18))
+
+### Fixes
+
+- Require golang.org/x/crypto v0.59.0 and golang.org/x/net v0.62.0 ([`13ed417`](https://github.com/vpndetection-io/sdk-go-gin/commit/13ed417ad83667722178d19a6a40e6d15d7f1e2c))
+
 ## 2.1.35 - 2026-11-20
 
 ### Fixes
