@@ -17,7 +17,7 @@ go get github.com/vpndetection-io/sdk-go-gin/v2
 
 Requires Go 1.26 or newer.
 
-No API key needed to start. Without one, a lookup is on Unlimited, the free plan, which answers VPN, Tor and relay detection with no daily or monthly cap. A paid plan's key adds the hosting, CDN and proxy flags and the provider behind each flag: create one in the [console](https://app.vpndetection.io). A free account tries every field.
+No API key needed to start. Without one, a lookup is on Unlimited, the free plan, which answers VPN, Tor, relay and bot detection (`is_bot`, whether an automated client such as a search engine's crawler uses the address) with no daily or monthly cap. A paid plan's key adds the hosting, CDN and proxy flags, the provider behind each flag, and `bot`, whose bot it is and whether its operator vouches for the address: create one in the [console](https://app.vpndetection.io). A free account tries every field.
 
 ```go
 package main
@@ -86,11 +86,14 @@ middleware.Conditions{{"vpn": middleware.BlockCondition{
     "confidence": vpndetectiongin.AnyOf("high", "medium"),
 }}}
 
+// a bot, on every plan
+middleware.Conditions{{"is_bot": true}}
+
 // a list is OR
 middleware.Conditions{{"is_tor": true}, {"is_resproxy": true}}
 ```
 
-Values are matched by equality, strings without regard to case. `AnyOf` means any-of. `Gte`, `Gt`, `Lte` and `Lt` compare numbers and chain into a range (`Gte(5).Lt(100)`); every bound you give must hold. Members set to `false` or `nil` are ignored, so a condition states the signals you act on; one that constrains nothing would match every request, and is refused when the middleware is built rather than silently blocking all your traffic.
+Values are matched by equality, strings without regard to case. `AnyOf` means any-of. `Gte`, `Gt`, `Lte` and `Lt` compare numbers and chain into a range (`Gte(5).Lt(100)`); every bound you give must hold. A member the answer holds as a list (`web`, `pubproxy.protocols`, `bittorrent.clients`, `bot.agents`, `bot.categories`) is never matched, so block on its flag alone (`is_bot`). Members set to `false` or `nil` are ignored, so a condition states the signals you act on; one that constrains nothing would match every request, and is refused when the middleware is built rather than silently blocking all your traffic.
 
 Replace the refusal with `OnBlocked`:
 
@@ -161,7 +164,7 @@ Beyond a few million distinct visitors a day, stop calling the API per request: 
 
 ## Absent is not false
 
-Unlimited, with a key or without one, leaves out `IsHosting`, `IsCdn`, the four proxy flags and the carrier, satellite, SSH, SMTP, web, DNS resolver and BitTorrent flags, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
+Unlimited, with a key or without one, answers `IsBot` without `Bot`, and leaves out `IsHosting`, `IsCdn`, the four proxy flags and the carrier, satellite, SSH, SMTP, web, DNS resolver and BitTorrent flags, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
 
 ```go
 vpndetection.BoolValue(lookup.Result.IsHosting)  // when you only want the flag
