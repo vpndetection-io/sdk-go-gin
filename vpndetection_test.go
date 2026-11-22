@@ -201,6 +201,28 @@ func TestBlocksWhenTheConditionMatches(t *testing.T) {
 	}
 }
 
+// is_bot is on every plan, so a condition on it blocks a bot's address from a
+// public peer and lets another address through.
+func TestAnIsBotConditionBlocksABotsAddress(t *testing.T) {
+	for body, want := range map[string]int{
+		`"is_vpn":false,"is_bot":true`:  http.StatusForbidden,
+		`"is_vpn":false,"is_bot":false`: http.StatusOK,
+	} {
+		api := newAPI(t, body)
+		call := serve(t, vpndetectiongin.Options{Options: middleware.Options[*gin.Context]{
+			Client:         api.client(t),
+			IPSelector:     fixedIP,
+			BlockCondition: middleware.Conditions{{"is_bot": true}},
+		}})
+		if status, _ := call(nil); status != want {
+			t.Errorf("%s: status = %d, want %d", body, status, want)
+		}
+		if got := api.addresses(); len(got) != 1 || got[0] != publicIP {
+			t.Errorf("%s: the API was asked about %v, want [%s]", body, got, publicIP)
+		}
+	}
+}
+
 // The handler must not run for a blocked request. Asserting only the status
 // would pass even if it did, because the refusal is written first.
 func TestABlockedRequestNeverReachesTheHandler(t *testing.T) {
