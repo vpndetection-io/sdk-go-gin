@@ -2,6 +2,14 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.2.0 - 2026-11-23
+
+### Features
+
+- AllowBots: send the visitor's user agent, and let a verified crawler through ([`60ea192`](https://github.com/vpndetection-io/sdk-go-gin/commit/60ea1928ed16c9e0d2b320e0a6a20ce736101019))
+- README: AllowBots, what it sends, and that a keyless client never gets a verdict ([`16cba40`](https://github.com/vpndetection-io/sdk-go-gin/commit/16cba405570554a971ebb4220c1bbd499a472621))
+- Require sdk-go v5.20.0: a visitor's user agent, and AllowBots ([`53ed861`](https://github.com/vpndetection-io/sdk-go-gin/commit/53ed861b3300f79e9641ecf24be9bcfd06f1149d))
+
 ## 2.1.36 - 2026-11-22
 
 ### Features
