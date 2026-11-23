@@ -20,6 +20,10 @@ const ContextKey = "vpndetection"
 // Options configure the middleware. Everything is optional except that you
 // almost certainly want an APIKey: without one a lookup leaves out the hosting,
 // CDN and proxy flags.
+//
+// AllowBots sends each request's own User-Agent header with its lookup and
+// lets a crawler whose answer verifies it through, whatever BlockCondition
+// matches; a keyless client is never answered a verdict.
 type Options struct {
 	middleware.Options[*gin.Context]
 
@@ -53,7 +57,7 @@ func New(options Options) (gin.HandlerFunc, error) {
 	}
 
 	return func(c *gin.Context) {
-		lookup, err := core.Evaluate(c.Request.Context(), c)
+		lookup, err := core.EvaluateAgent(c.Request.Context(), c, c.GetHeader("User-Agent"))
 		if err != nil {
 			onError(c, err)
 			return
