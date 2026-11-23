@@ -95,6 +95,20 @@ middleware.Conditions{{"is_tor": true}, {"is_resproxy": true}}
 
 Values are matched by equality, strings without regard to case. `AnyOf` means any-of. `Gte`, `Gt`, `Lte` and `Lt` compare numbers and chain into a range (`Gte(5).Lt(100)`); every bound you give must hold. A member the answer holds as a list (`web`, `pubproxy.protocols`, `bittorrent.clients`, `bot.agents`, `bot.categories`) is never matched, so block on its flag alone (`is_bot`). Members set to `false` or `nil` are ignored, so a condition states the signals you act on; one that constrains nothing would match every request, and is refused when the middleware is built rather than silently blocking all your traffic.
 
+### Let a verified crawler through
+
+`AllowBots` sends each request's own `User-Agent` header with its lookup, and a request whose answer verifies that agent, Googlebot from one of Google's own addresses, is never refused, whatever the condition matches. The answer is still on the context, its verdict in `lookup.Result.UserAgent`:
+
+```go
+Options: middleware.Options[*gin.Context]{
+    APIKey:         os.Getenv("VPNDETECTION_API_KEY"),
+    BlockCondition: middleware.Conditions{{"is_hosting": true}},
+    AllowBots:      true,
+},
+```
+
+The verdict needs every field, so a paid key or the trial: a keyless client, or a free key past its trial, is never answered one, lets no crawler through, and the middleware warns once. With `AllowBots` on, a condition can refuse a crawler forging its agent: `middleware.Conditions{{"user_agent": middleware.BlockCondition{"verdict": "spoofed"}}}`. It is off by default; off, no agent is sent, and the cache holds one answer per address rather than one per address and agent. A request with no `User-Agent` sends none.
+
 Replace the refusal with `OnBlocked`:
 
 ```go
