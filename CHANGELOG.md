@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.2.2 - 2026-11-24
+
+### Fixes
+
+- Require sdk-go v5.21.0: a condition on a list member matches any element ([`a08d780`](https://github.com/vpndetection-io/sdk-go-gin/commit/a08d7804cf34bb817edb3b9d72c7c342c533edf3))
+
 ## 2.2.1 - 2026-11-24
 
 ### Fixes
