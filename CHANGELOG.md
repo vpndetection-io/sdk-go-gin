@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.2.3 - 2026-11-25
+
+### Fixes
+
+- Require sdk-go v5.21.1: its doc comments name a paid plan, the entitlement example the Data plan ([`a1b2bbe`](https://github.com/vpndetection-io/sdk-go-gin/commit/a1b2bbe252c321ec069b1e1832f4d6fb1b8b4b1f))
+
 ## 2.2.2 - 2026-11-24
 
 ### Fixes
