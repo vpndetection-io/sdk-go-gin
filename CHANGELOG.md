@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.2.4 - 2026-11-26
+
+### Features
+
+- Require sdk-go v5.22.0: AllowBots sends only a crawler's User-Agent, at most four an address ([`cc483ae`](https://github.com/vpndetection-io/sdk-go-gin/commit/cc483aebfe385ae5930819442b8885ecff979c3c))
+
 ## 2.2.3 - 2026-11-25
 
 ### Fixes
