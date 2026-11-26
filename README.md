@@ -97,7 +97,7 @@ Values are matched by equality, strings without regard to case. `AnyOf` means an
 
 ### Let a verified crawler through
 
-`AllowBots` sends each request's own `User-Agent` header with its lookup, and a request whose answer verifies that agent, Googlebot from one of Google's own addresses, is never refused, whatever the condition matches. The answer is still on the context, its verdict in `lookup.Result.UserAgent`:
+`AllowBots` sends a request's own `User-Agent` header with its lookup when it names a crawler, and a request whose answer verifies that agent, Googlebot from one of Google's own addresses, is never refused, whatever the condition matches. The answer is still on the context, its verdict in `lookup.Result.UserAgent`:
 
 ```go
 Options: middleware.Options[*gin.Context]{
@@ -107,7 +107,7 @@ Options: middleware.Options[*gin.Context]{
 },
 ```
 
-The verdict needs every field, so a paid key or the trial: a keyless client, or a free key past its trial, is never answered one, lets no crawler through, and the middleware warns once. With `AllowBots` on, a condition can refuse a crawler forging its agent: `middleware.Conditions{{"user_agent": middleware.BlockCondition{"verdict": "spoofed"}}}`. It is off by default; off, no agent is sent, and the cache holds one answer per address rather than one per address and agent. A request with no `User-Agent` sends none.
+The verdict needs every field, so a paid key or the trial: a keyless client, or a free key past its trial, is never answered one, lets no crawler through, and the middleware warns once. With `AllowBots` on, a condition can refuse a crawler forging its agent: `middleware.Conditions{{"user_agent": middleware.BlockCondition{"verdict": "spoofed"}}}`. It is off by default; off, no agent is sent, and the cache holds one answer per address rather than one per address and agent. Any other agent, or none, is not sent, since its verdict could only be `not_bot`. One address is looked up with at most four crawler agents an hour: past those its lookup sends none, and a request passes as a crawler only where the answer's `Bot.Verified` is true.
 
 Replace the refusal with `OnBlocked`:
 
