@@ -17,7 +17,7 @@ go get github.com/vpndetection-io/sdk-go-gin/v2
 
 Requires Go 1.26 or newer.
 
-No API key needed to start. Without one, a lookup is on Unlimited, the free plan, which answers VPN, Tor, relay and bot detection (`is_bot`, whether an automated client such as a search engine's crawler uses the address) with no daily or monthly cap. A paid plan's key adds the hosting, CDN and proxy flags, the provider behind each flag, and `bot`, whose bot it is and whether its operator vouches for the address: create one in the [console](https://app.vpndetection.io). A free account tries every field.
+No API key needed to start. Without one, a lookup is on Unlimited, the free plan, which answers VPN, Tor and relay detection with no daily or monthly cap. A paid plan's key adds the hosting, CDN and proxy flags, the provider behind each flag, `is_bot` (whether an automated client such as a search engine's crawler uses the address), `bot`, whose bot it is and whether its operator vouches for the address, and the AS's `type`: create one in the [console](https://app.vpndetection.io). A free account tries every field.
 
 ```go
 package main
@@ -86,7 +86,7 @@ middleware.Conditions{{"vpn": middleware.BlockCondition{
     "confidence": vpndetectiongin.AnyOf("high", "medium"),
 }}}
 
-// a bot, on every plan
+// a bot, on a paid plan
 middleware.Conditions{{"is_bot": true}}
 
 // a list is OR
@@ -107,7 +107,7 @@ Options: middleware.Options[*gin.Context]{
 },
 ```
 
-The verdict needs every field, so a paid key or the trial: a keyless client, or a free key past its trial, is never answered one, lets no crawler through, and the middleware warns once. With `AllowBots` on, a condition can refuse a crawler forging its agent: `middleware.Conditions{{"user_agent": middleware.BlockCondition{"verdict": "spoofed"}}}`. It is off by default; off, no agent is sent, and the cache holds one answer per address rather than one per address and agent. Any other agent, or none, is not sent, since its verdict could only be `not_bot`. One address is looked up with at most four crawler agents an hour: past those its lookup sends none, and a request passes as a crawler only where the answer's `Bot.Verified` is true.
+The verdict needs every field, so a paid key or the trial: a keyless client, or a free key past its trial, is never answered one, lets no crawler through, and the middleware warns once. `AllowBots` reads the `bot` verdict, a paid plan's, so an app without a key gets no bot pass. With `AllowBots` on, a condition can refuse a crawler forging its agent: `middleware.Conditions{{"user_agent": middleware.BlockCondition{"verdict": "spoofed"}}}`. It is off by default; off, no agent is sent, and the cache holds one answer per address rather than one per address and agent. Any other agent, or none, is not sent, since its verdict could only be `not_bot`. One address is looked up with at most four crawler agents an hour: past those its lookup sends none, and a request passes as a crawler only where the answer's `Bot.Verified` is true.
 
 Replace the refusal with `OnBlocked`:
 
@@ -178,13 +178,13 @@ Beyond a few million distinct visitors a day, stop calling the API per request: 
 
 ## Absent is not false
 
-Unlimited, with a key or without one, answers `IsBot` without `Bot`, and leaves out `IsHosting`, `IsCdn`, the four proxy flags and the carrier, satellite, SSH, SMTP, web, DNS resolver and BitTorrent flags, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no".
+Unlimited, with a key or without one, leaves out `IsBot`, `IsHosting`, `IsCdn`, the four proxy flags and the carrier, satellite, SSH, SMTP, web, DNS resolver and BitTorrent flags, the AS's `Type`, and of the detail behind each flag it answers only Tor's and relay's. A field your plan does not include is a nil pointer, which means "not in your plan" rather than "checked, and no"; `Asn.Type` keeps its plain string, so it reads empty there.
 
 ```go
 vpndetection.BoolValue(lookup.Result.IsHosting)  // when you only want the flag
 ```
 
-A `BlockCondition` naming a member your plan does not serve can never match, so the middleware warns once instead of failing silently. Set `OnMissingField: middleware.MissingFieldError` to make it an error.
+A `BlockCondition` naming a member your plan does not serve can never match, so the middleware warns once instead of failing silently. Set `OnMissingField: middleware.MissingFieldError` to make it an error. A condition on `is_bot` or `asn.type` without a key is reported missing, never matched.
 
 ## Other Libraries
 
