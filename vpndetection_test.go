@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -201,7 +202,7 @@ func TestBlocksWhenTheConditionMatches(t *testing.T) {
 	}
 }
 
-// is_bot is on every plan, so a condition on it blocks a bot's address from a
+// is_bot is a paid plan's: a condition on it blocks a bot's address from a
 // public peer and lets another address through.
 func TestAnIsBotConditionBlocksABotsAddress(t *testing.T) {
 	for body, want := range map[string]int{
@@ -329,6 +330,52 @@ func TestFailClosedBlocksOnAFailedLookup(t *testing.T) {
 	}})
 	if status, _ := call(nil); status != http.StatusForbidden {
 		t.Errorf("status = %d, want 403", status)
+	}
+}
+
+// An answer without a key leaves out the AS's type, and the type reads as an
+// empty string there: a condition on it, an empty string included, never
+// matches, and the member is reported by its path, said once as a warning and
+// as a 500 under OnMissingField error. Served, the same condition blocks.
+func TestAConditionOnTheASsTypeIsReportedMissingAndNeverMatchedWithoutAKey(t *testing.T) {
+	const asn = `"is_vpn":false,"asn":{"asn":9009,"name":"M247 Europe SRL","domain":"m247global.com",%s` +
+		`"prefix":"146.70.116.0/24","country":"US","rpki_status":"valid"}`
+	condition := middleware.Conditions{{"asn": middleware.BlockCondition{"type": middleware.AnyOf("hosting", "")}}}
+
+	keyless := newAPI(t, fmt.Sprintf(asn, ""))
+	warnings := &recorder{}
+	call := serve(t, vpndetectiongin.Options{Options: middleware.Options[*gin.Context]{
+		Client:         keyless.client(t),
+		IPSelector:     fixedIP,
+		BlockCondition: condition,
+		Logger:         slog.New(warnings),
+	}})
+	for range 2 {
+		if status, _ := call(nil); status != http.StatusOK {
+			t.Errorf("status = %d, want 200: the type is not in the answer", status)
+		}
+	}
+	if got := warnings.seen(); len(got) != 1 || !strings.Contains(got[0], "asn.type") {
+		t.Errorf("warned %q, want one warning naming asn.type", got)
+	}
+
+	failing := serve(t, vpndetectiongin.Options{Options: middleware.Options[*gin.Context]{
+		Client:         newAPI(t, fmt.Sprintf(asn, "")).client(t),
+		IPSelector:     fixedIP,
+		BlockCondition: condition,
+		OnMissingField: middleware.MissingFieldError,
+	}})
+	if status, _ := failing(nil); status != http.StatusInternalServerError {
+		t.Errorf("status = %d, want 500 for a condition on a member the answer left out", status)
+	}
+
+	served := serve(t, vpndetectiongin.Options{Options: middleware.Options[*gin.Context]{
+		Client:         newAPI(t, fmt.Sprintf(asn, `"type":"hosting",`)).client(t),
+		IPSelector:     fixedIP,
+		BlockCondition: condition,
+	}})
+	if status, _ := served(nil); status != http.StatusForbidden {
+		t.Errorf("status = %d, want 403 for a hosting network", status)
 	}
 }
 
