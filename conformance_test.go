@@ -105,13 +105,20 @@ func TestCorpusConditions(t *testing.T) {
 				},
 			})
 
-			status, _ := call(nil)
+			status, out := call(nil)
 			want := http.StatusOK
 			if c.Expect.Blocked {
 				want = http.StatusForbidden
 			}
 			if status != want {
 				t.Errorf("status = %d, want %d (%s)", status, want, c.Why)
+			}
+			// A request that reaches the handler carries the peer's answer: a
+			// middleware replaced by a no-op passes every case that blocks
+			// nothing and reports nothing, unless this is asserted.
+			if !c.Expect.Blocked && (!out.Attached || out.IP != ip) {
+				t.Errorf("the handler saw an answer attached = %v for %q, want one attached for %q (%s)",
+					out.Attached, out.IP, ip, c.Why)
 			}
 
 			var reported []string
