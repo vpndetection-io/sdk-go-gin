@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -228,5 +229,197 @@ func TestAnAnswerWithoutAVerdictWarnsOnce(t *testing.T) {
 	}
 	if about != 1 {
 		t.Errorf("warned %d times about the missing verdict, want once: %q", about, logs.messages)
+	}
+}
+
+const chrome = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " +
+	"Chrome/151.0.0.0 Safari/537.36"
+
+func crawlerAgent(n int) string {
+	return fmt.Sprintf("Mozilla/5.0 (compatible; Examplebot/%d.0)", n)
+}
+
+// crawlerOrigin answers every address as a bot's, and a lookup that carries a
+// user agent a verified verdict for it. With verified set, the answer's bot
+// member also says its operator vouches for the address.
+type crawlerOrigin struct {
+	verified bool
+	mu       sync.Mutex
+	agents   []string
+	sent     []bool
+}
+
+func (o *crawlerOrigin) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	agent, sent := r.URL.Query()["user_agent"]
+	o.mu.Lock()
+	o.agents = append(o.agents, strings.Join(agent, ","))
+	o.sent = append(o.sent, sent)
+	o.mu.Unlock()
+	body := fmt.Sprintf(`{"ip":%q,"is_vpn":false,"is_bot":true`, strings.TrimPrefix(r.URL.Path, "/"))
+	if o.verified {
+		body += `,"bot":{"verified":true}`
+	}
+	if sent {
+		body += `,"user_agent":{"agent":"Examplebot","kind":"bot","verdict":"verified"}`
+	}
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, body+"}")
+}
+
+// What the origin handler behind the middleware saw: a request that reached it
+// at all, so a middleware replaced by a no-op fails an assertion on it.
+type reached struct {
+	Attached bool   `json:"attached"`
+	Bogon    bool   `json:"bogon"`
+	Verdict  string `json:"verdict"`
+}
+
+type reply struct {
+	status int
+	reached
+}
+
+// askEach stands the middleware up with AllowBots on a real socket, every
+// request arriving from peer through a selector and no answer cached, and asks
+// with each User-Agent in turn; an empty one sends none.
+func askEach(t *testing.T, origin http.Handler, peer string, condition middleware.Conditions,
+	action middleware.MissingFieldAction, agents ...string) []reply {
+	t.Helper()
+	api := httptest.NewServer(origin)
+	t.Cleanup(api.Close)
+	client, err := vpndetection.New(vpndetection.WithBaseURL(api.URL), vpndetection.WithAPIKey("key"),
+		vpndetection.WithoutCache())
+	if err != nil {
+		t.Fatalf("vpndetection.New: %v", err)
+	}
+	guard := vpndetectiongin.Must(vpndetectiongin.Options{Options: middleware.Options[*gin.Context]{
+		Client: client, BlockCondition: condition, AllowBots: true, OnMissingField: action,
+		IPSelector: func(*gin.Context) string { return peer }, Logger: slog.New(slog.DiscardHandler),
+	}})
+	server := httptest.NewServer(botEngine(guard, func(c *gin.Context) {
+		out := reached{}
+		if lookup := vpndetectiongin.FromContext(c); lookup != nil && lookup.Result != nil {
+			out.Attached, out.Bogon = true, lookup.Result.IsBogon
+			if lookup.Result.UserAgent != nil {
+				out.Verdict = string(lookup.Result.UserAgent.Verdict)
+			}
+		}
+		c.JSON(http.StatusOK, out)
+	}))
+	t.Cleanup(server.Close)
+
+	var replies []reply
+	for _, agent := range agents {
+		request, err := http.NewRequest(http.MethodGet, server.URL+"/", nil)
+		if err != nil {
+			t.Fatalf("NewRequest: %v", err)
+		}
+		// An empty header is left off the wire, and Go's client would send its
+		// own agent were the header absent.
+		request.Header.Set("User-Agent", agent)
+		response, err := http.DefaultClient.Do(request)
+		if err != nil {
+			t.Fatalf("Do: %v", err)
+		}
+		raw, _ := io.ReadAll(response.Body)
+		_ = response.Body.Close()
+		got := reply{status: response.StatusCode}
+		if response.StatusCode == http.StatusOK {
+			if err := json.Unmarshal(raw, &got.reached); err != nil {
+				t.Fatalf("response body is not one JSON document (%v): %s", err, raw)
+			}
+		}
+		replies = append(replies, got)
+	}
+	return replies
+}
+
+var (
+	botCondition    = middleware.Conditions{{"is_bot": true}}
+	spoofedVerdict  = middleware.Conditions{{"user_agent": middleware.BlockCondition{"verdict": "spoofed"}}}
+	crawlerPeer     = "66.249.66.1"
+	fiveCrawlerUAs  = []string{crawlerAgent(1), crawlerAgent(2), crawlerAgent(3), crawlerAgent(4), crawlerAgent(5)}
+	fourThenNoAgent = []string{crawlerAgent(1), crawlerAgent(2), crawlerAgent(3), crawlerAgent(4), ""}
+)
+
+// One address is looked up with at most four crawler agents an hour: the
+// fifth reaches the API bare, and under a condition on is_bot is refused, since
+// no verdict vouches for it.
+func TestAnAddressIsLookedUpWithAtMostFourCrawlerAgentsEndToEnd(t *testing.T) {
+	origin := &crawlerOrigin{}
+	replies := askEach(t, origin, crawlerPeer, botCondition, "", fiveCrawlerUAs...)
+	for n, got := range replies[:4] {
+		if got.status != http.StatusOK || !got.Attached || got.Verdict != "verified" {
+			t.Errorf("agent %d answered %+v, want 200 with the verified verdict attached", n+1, got)
+		}
+	}
+	if got := replies[4]; got.status != http.StatusForbidden {
+		t.Errorf("the fifth agent answered %d, want the condition's 403", got.status)
+	}
+	if !slices.Equal(origin.agents, fourThenNoAgent) {
+		t.Errorf("the API saw user_agent %q, want the first four agents and then none", origin.agents)
+	}
+	if !slices.Equal(origin.sent, []bool{true, true, true, true, false}) {
+		t.Errorf("the API saw user_agent sent as %v, want four agents and a bare fifth", origin.sent)
+	}
+}
+
+// Past the bound an address its operator vouches for still passes, and a browser
+// on that address is judged by the condition alone.
+func TestPastTheBoundAVouchedForCrawlerStillPassesEndToEnd(t *testing.T) {
+	origin := &crawlerOrigin{verified: true}
+	replies := askEach(t, origin, crawlerPeer, botCondition, "", append(slices.Clone(fiveCrawlerUAs), chrome)...)
+	for n, got := range replies[:5] {
+		if got.status != http.StatusOK || !got.Attached {
+			t.Errorf("agent %d answered %+v, want 200 with the answer attached", n+1, got)
+		}
+	}
+	if want := append(slices.Clone(fourThenNoAgent), ""); !slices.Equal(origin.agents, want) {
+		t.Errorf("the API saw user_agent %q, want the first four agents and then none, a browser's included", origin.agents)
+	}
+	if got := replies[5]; got.status != http.StatusForbidden {
+		t.Errorf("a browser on that address answered %d, want the condition's 403", got.status)
+	}
+}
+
+// An agent that names no crawler is never sent, from an address with room.
+func TestABrowsersAgentIsNeverSentEndToEnd(t *testing.T) {
+	origin := &crawlerOrigin{}
+	replies := askEach(t, origin, crawlerPeer, botCondition, "", chrome)
+	if got := replies[0]; got.status != http.StatusForbidden {
+		t.Errorf("a browser on a bot's address answered %d, want the condition's 403", got.status)
+	}
+	if !slices.Equal(origin.sent, []bool{false}) {
+		t.Errorf("a browser reached the API as %q, want no agent", origin.agents)
+	}
+}
+
+// A request that sent no agent has no verdict to lack: under OnMissingField
+// error it is answered, not a 500.
+func TestARequestWithNoUserAgentReportsNoVerdictGapEndToEnd(t *testing.T) {
+	origin := &crawlerOrigin{}
+	for _, got := range askEach(t, origin, crawlerPeer, spoofedVerdict, middleware.MissingFieldError, "", chrome) {
+		if got.status != http.StatusOK || !got.Attached {
+			t.Errorf("answered %+v, want 200 with the answer attached, and no plan gap", got)
+		}
+	}
+	if !slices.Equal(origin.sent, []bool{false, false}) {
+		t.Errorf("the API saw user_agent sent as %v, want none", origin.sent)
+	}
+}
+
+// A bogon peer, local development behind no proxy, is answered locally with no
+// verdict, and that is no plan gap: it was answered 500 under OnMissingField
+// error.
+func TestABogonPeerWithACrawlerAgentIsNoPlanGapEndToEnd(t *testing.T) {
+	for _, peer := range []string{"127.0.0.1", "10.0.0.1", "::1"} {
+		origin := &crawlerOrigin{}
+		got := askEach(t, origin, peer, spoofedVerdict, middleware.MissingFieldError, googlebot)[0]
+		if got.status != http.StatusOK || !got.Attached || !got.Bogon {
+			t.Errorf("%s: answered %+v, want 200 with a bogon answer attached", peer, got)
+		}
+		if len(origin.agents) != 0 {
+			t.Errorf("%s: a bogon reached the API: %q", peer, origin.agents)
+		}
 	}
 }
