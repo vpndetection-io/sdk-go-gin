@@ -542,6 +542,43 @@ func TestAConditionThatConstrainsNothingIsRefused(t *testing.T) {
 	}
 }
 
+// A list of terms is any-of from a public peer, and a term no answer can match is
+// refused where the middleware is built, rather than blocking nobody.
+func TestAListOfTermsIsAnyOfAndATermNoAnswerMatchesIsRefused(t *testing.T) {
+	condition := middleware.Conditions{
+		{"vpn": middleware.BlockCondition{"provider": []string{"mullvad", "nordvpn"}}},
+	}
+	for provider, want := range map[string]int{"NordVPN": http.StatusForbidden, "proton": http.StatusOK} {
+		api := newAPI(t, fmt.Sprintf(`"is_vpn":true,"vpn":{"provider":%q}`, provider))
+		call := serve(t, vpndetectiongin.Options{Options: middleware.Options[*gin.Context]{
+			Client:         api.client(t),
+			IPSelector:     fixedIP,
+			BlockCondition: condition,
+		}})
+		status, out := call(nil)
+		if status != want {
+			t.Errorf("%s: status = %d, want %d", provider, status, want)
+		}
+		if want == http.StatusOK && (!out.Attached || !out.IsVpn) {
+			t.Errorf("%s: the handler saw attached %v and is_vpn %v, want the answer",
+				provider, out.Attached, out.IsVpn)
+		}
+		if got := api.addresses(); len(got) != 1 || got[0] != publicIP {
+			t.Errorf("%s: the API was asked about %v, want [%s]", provider, got, publicIP)
+		}
+	}
+
+	provider := "nordvpn"
+	for name, term := range map[string]any{"a pointer": &provider, "a Bound with no limit": middleware.Bound{}} {
+		_, err := vpndetectiongin.New(vpndetectiongin.Options{Options: middleware.Options[*gin.Context]{
+			BlockCondition: middleware.Conditions{{"vpn": middleware.BlockCondition{"provider": term}}},
+		}})
+		if err == nil {
+			t.Errorf("New accepted %s, which no answer matches", name)
+		}
+	}
+}
+
 // The README's own setup, an APIKey and nothing else. Through sdk-go v5.5.0 New
 // refused it, and Must panicked, because the core passed the unset BaseURL on.
 // The README's app as written: its trusted proxies, and the middleware built from
