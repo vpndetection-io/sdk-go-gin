@@ -2,6 +2,12 @@
 
 What each release changed for you, newest first. Each line is a commit's summary, linked to its full description and diff. Releases before 2.1.2 are described by their release commits.
 
+## 2.2.8 - 2026-11-28
+
+### Features
+
+- Require sdk-go v5.24.0: a list of terms is any-of, an unmatchable term is refused ([`bdaef56`](https://github.com/vpndetection-io/sdk-go-gin/commit/bdaef560e6dcc23a16fa8c320ba2eca31dbd2dc3))
+
 ## 2.2.7 - 2026-11-27
 
 ### Fixes
